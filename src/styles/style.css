@@ -1,0 +1,53 @@
+.wrap{
+    background-color: #22293d;
+}
+
+.preheader{
+    color: #fff;
+    padding-top: 2vh;
+}
+
+.imageRow{
+    padding-top: 6vh;
+}
+
+.getStartedButton{
+    border:0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    background-color:  #e37617;
+    box-shadow: none; 
+    padding: 1vh;
+    width: 80%;
+    color: #fff;
+}
+
+
+.bigAssContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background-color: #22293d;
+}
+
+.firstImage{
+    background-color: #fff;
+    padding:10vh;
+    margin-top:20vh;
+    margin-bottom: 20vh;
+    width: 80%;
+    height: 80vh;
+    border:2px #000000 solid;
+}
+
+.fade-in{
+    opacity: 0.5;
+    transition: opacity 500ms ease-in;
+}
+
+.fade-in:hover{
+    opacity: 1;
+}
