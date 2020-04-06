@@ -1,11 +1,11 @@
 import React,{Component} from 'react';
-import { Container, Row, Col, Button} from 'react-bootstrap';
+import { Container, Row, Col} from 'react-bootstrap';
 import "./styles/style.css";
 import "./styles/spinner.css";
 
 import stockImage from "./Assets/stockImg.png";
 import TopNavBar from "./components/topNavbar";
-import {Link} from "react-scroll";
+import axios from 'axios';
 
 var timeseries = require("timeseries-analysis");
 
@@ -20,11 +20,16 @@ var timeseries = require("timeseries-analysis");
 
 
 var TrainingData = [];
+var GLOBAL_currentForecast = 0;
+var GLOBAL_currentActual = 0;
 // var TrainingDataLoaded = false;
 var Min;
 var Max;
 var Mean;
 var Stdev;
+
+var GLOBAL_t;
+var Iter = 12;
 
 class App extends Component {
   state = {
@@ -32,9 +37,60 @@ class App extends Component {
     dataLoaded:false,
     data:null,
     transformedData:null,
+    forecastStarted:false,
+    forecastedValue:0,
+    actualValue:null
+  }
+  
+
+  getData=(event)=>{
+    if(this.state.forecastStarted){
+      console.log("New ForeCast")
+      console.log(event)
+      var coeffs = GLOBAL_t.ARMaxEntropy({
+        data: GLOBAL_t.data.slice(Iter-12,Iter)
+      })
+
+      console.log(coeffs);
+      var forecast = 0;
+
+      for(var i=0;i<coeffs.length;i++){
+        forecast -= GLOBAL_t.data[Iter-i][1]*coeffs[i];
+      }
+
+      console.log(forecast,GLOBAL_t.data[Iter+1][1]);
+      Iter = Iter+12;
+
+      GLOBAL_currentForecast = forecast;
+      GLOBAL_currentActual = GLOBAL_t.data[Iter+1][1];
+
+      axios.post('https://wt-project-be33d.firebaseio.com/forecast-values.json',{
+        forecast:GLOBAL_currentForecast,
+        actualValue:GLOBAL_currentActual
+      })
+      .then(response=>{
+        this.setState(()=>({
+          forecastedValue:GLOBAL_currentForecast,
+          actualValue:GLOBAL_currentActual
+        }))
+      })
+      .catch((err)=>{
+        console.log(err)
+      })
+      console.log('Hero')
+    }
   }
 
-  
+  periodicRefresh =(event)=>{
+
+    event.target.style.display = "none";
+    this.setState({
+      forecastStarted:true
+    })
+
+    // var forecastDatapoint = 11;
+  }
+
   fetchData = () =>{
     if(!this.state.dataLoaded){  
       console.log("if statement is returning");
@@ -75,14 +131,16 @@ class App extends Component {
   }
 
   transformData = ()=>{
+    TrainingData = []
     this.buildData();
 
     if(TrainingData!==[]){
       var t = new timeseries.main(TrainingData);
+      GLOBAL_t = t;
       console.log(t);
       t.ma().lwma();
       var processed = t.ma().output();
-      var chart_url = t.ma({period: 14}).chart();
+      var chart_url = t.ma({period: 14}).chart() + "&chdl=" +"\"Data Values\"" +"&chtt=Data Values(x-axis) And Dates(y-axis)";
       //console.log(chart_url,processed)
 
       //For smoothening out the curve
@@ -90,6 +148,7 @@ class App extends Component {
       Max = t.max();
       Mean = t.mean();
       Stdev = t.stdev();
+      console.log(Min,Max,Mean,Stdev);
 
       //Smoothening
       t.smoother({
@@ -98,24 +157,43 @@ class App extends Component {
       t.dsp_itrend({
         alpha:   0.01
       });
-      var chart_url_2 = t.ma({period: 1}).chart();
-
+    
       //NOISE Seperation
-      
+      var newVar = t.smoother({period:10}).noiseData().smoother({period:5});
+      //smoothing the noisy data without any lag
+      newVar.dsp_itrend({
+        alpha:0.01
+      })
+      var chart_noise_url = newVar.chart({main:true,lines:[0]}) + "&chdl=" +"\"Noise Value Smoothend Out\"|\"Main Values\"" + "&chtt=Noise Seperation and Smoothening" ;
+
+      //FORECASTING(console logging that shit out)
+      /**This package allows you to easily forecast future values 
+      by calculating the Auto-Regression (AR) coefficients for your data. */
+
 
       return (
         <div className="bigAssContainer">
-          <img className="firstImage fade-in" src={chart_url} ref="first" onLoad={()=>{this.refs.first.scrollIntoView({block: 'end', behavior: 'smooth'})}} />
-          <img className="firstImage fade-in" src={chart_url_2} ref="first" />
+          <img className="firstImage fade-in" src={chart_url} ref="first" /> {/* onLoad={()=>{this.refs.first.scrollIntoView({block: 'end', behavior: 'smooth'})}}*/}
+          <img className="firstImage fade-in" src={chart_noise_url} ref="first" />
+          <button className="getStartedButton" onClick={(event)=>this.periodicRefresh(event)}>
+            <h3 height="100%">Start ForeCasting</h3>
+          </button>
         </div>
       )
     }
+  }
+  
+  componentDidMount(){
+    this.getData();
+    
+    setInterval(this.getData,5000);
   }
 
   render(){
     // if(!this.state.dataLoaded){
     //   this.fetchData();
     // }
+    
     return(
       <div>
           <Container className="wrap" fluid>
@@ -156,6 +234,15 @@ class App extends Component {
           </Container>
           {
             this.state.dataLoading===true ? <div className="loader spinnerContainer">Loading</div> : this.state.dataLoading === false ? this.transformData() : null
+          }
+          {
+            this.state.forecastStarted===true ? (
+              <div className="Forecasting-container">
+                  <h3>Forecasted Values: </h3>{this.state.forecastedValue}<br/>
+                  <h3>Actual Value: </h3>{this.state.actualValue}
+              </div>
+            )
+          : null
           }
       </div>
     )
