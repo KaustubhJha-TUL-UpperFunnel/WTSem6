@@ -6,6 +6,7 @@ import "./styles/spinner.css";
 import stockImage from "./Assets/stockImg.png";
 import TopNavBar from "./components/topNavbar";
 import axios from 'axios';
+import { findByLabelText } from '@testing-library/react';
 
 var timeseries = require("timeseries-analysis");
 
@@ -39,7 +40,8 @@ class App extends Component {
     transformedData:null,
     forecastStarted:false,
     forecastedValue:0,
-    actualValue:null
+    actualValue:null,
+    year:0
   }
   
 
@@ -69,9 +71,10 @@ class App extends Component {
         actualValue:GLOBAL_currentActual
       })
       .then(response=>{
-        this.setState(()=>({
+        this.setState((prevstate)=>({
           forecastedValue:GLOBAL_currentForecast,
-          actualValue:GLOBAL_currentActual
+          actualValue:GLOBAL_currentActual,
+          year:prevstate.year + 1
         }))
       })
       .catch((err)=>{
@@ -139,7 +142,7 @@ class App extends Component {
       GLOBAL_t = t;
       console.log(t);
       t.ma().lwma();
-      var processed = t.ma().output();
+      //var processed = t.ma().output();
       var chart_url = t.ma({period: 14}).chart() + "&chdl=" +"\"Data Values\"" +"&chtt=Data Values(x-axis) And Dates(y-axis)";
       //console.log(chart_url,processed)
 
@@ -173,8 +176,8 @@ class App extends Component {
 
       return (
         <div className="bigAssContainer">
-          <img className="firstImage fade-in" src={chart_url} ref="first" /> {/* onLoad={()=>{this.refs.first.scrollIntoView({block: 'end', behavior: 'smooth'})}}*/}
-          <img className="firstImage fade-in" src={chart_noise_url} ref="first" />
+          <img className="firstImage fade-in" src={chart_url} ref="first" alt="Data"/> {/* onLoad={()=>{this.refs.first.scrollIntoView({block: 'end', behavior: 'smooth'})}}*/}
+          <img className="firstImage fade-in" src={chart_noise_url} ref="first" alt="smoothened Data"/>
           <button className="getStartedButton" onClick={(event)=>this.periodicRefresh(event)}>
             <h3 height="100%">Start ForeCasting</h3>
           </button>
@@ -190,10 +193,6 @@ class App extends Component {
   }
 
   render(){
-    // if(!this.state.dataLoaded){
-    //   this.fetchData();
-    // }
-    
     return(
       <div>
           <Container className="wrap" fluid>
@@ -227,7 +226,7 @@ class App extends Component {
                 </Container>
               </Col>
               <Col className="align-middle">
-                <img src={stockImage} width="100%" height="80%">
+                <img src={stockImage} width="100%" height="80%" alt="stolenImage">
                 </img>
               </Col>
             </Row>
@@ -238,8 +237,9 @@ class App extends Component {
           {
             this.state.forecastStarted===true ? (
               <div className="Forecasting-container">
-                  <h3>Forecasted Values: </h3>{this.state.forecastedValue}<br/>
-                  <h3>Actual Value: </h3>{this.state.actualValue}
+                  <h1 className="year">Year {this.state.year}</h1>
+                  <h1>Forecasted Values: </h1> <div className="Values">{this.state.forecastedValue}</div><br/>
+                  <h1>Actual Value: </h1><div className="Values">{this.state.actualValue}</div><br/>
               </div>
             )
           : null

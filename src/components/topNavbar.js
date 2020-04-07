@@ -1,5 +1,5 @@
 import React,{Component} from 'react';
-import { Container, Row, Col, Button} from 'react-bootstrap';
+import {Col} from 'react-bootstrap';
 
 
 //GET https://www.quandl.com/api/v3/datasets/{database_code}/{dataset_code}/data.{return_for
