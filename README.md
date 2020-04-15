@@ -8,6 +8,8 @@ In the project directory you run:
 
 It builds the project
 
+### `cd WTSem6-master`
+
 ### `npm install`
 
 Installs the reqired node modules
