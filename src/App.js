@@ -6,7 +6,6 @@ import "./styles/spinner.css";
 import stockImage from "./Assets/stockImg.png";
 import TopNavBar from "./components/topNavbar";
 import axios from 'axios';
-import { findByLabelText } from '@testing-library/react';
 
 var timeseries = require("timeseries-analysis");
 
@@ -41,9 +40,19 @@ class App extends Component {
     forecastStarted:false,
     forecastedValue:0,
     actualValue:null,
-    year:0
+    year:0,
+    topNavbarData:null
   }
   
+  setNavbarData =()=>{
+    axios.get("https://wt-project-be33d.firebaseio.com/prices.json")
+    .then(response=>{
+      console.log(response)
+      this.setState(()=>({
+        topNavbarData:response.data
+      }))
+    })
+  }
 
   getData=(event)=>{
     if(this.state.forecastStarted){
@@ -143,7 +152,7 @@ class App extends Component {
       console.log(t);
       t.ma().lwma();
       //var processed = t.ma().output();
-      var chart_url = t.ma({period: 14}).chart() + "&chdl=" +"\"Data Values\"" +"&chtt=Data Values(x-axis) And Dates(y-axis)";
+      var chart_url = t.ma({period: 12}).chart() + "&chdl=" +"\"Data Values\"" +"&chtt=Data Values(x-axis) And Dates(y-axis)";
       //console.log(chart_url,processed)
 
       //For smoothening out the curve
@@ -187,6 +196,7 @@ class App extends Component {
   }
   
   componentDidMount(){
+    this.setNavbarData();
     this.getData();
     
     setInterval(this.getData,5000);
@@ -197,10 +207,10 @@ class App extends Component {
       <div>
           <Container className="wrap" fluid>
             <Row className="preheader justify-content-md-center">
-              <TopNavBar stockItem="GOLD" currentPrice="136.76"/>
-              <TopNavBar stockItem="OIL" currentPrice="228.74" />
-              <TopNavBar stockItem="SENSEX" currentPrice ="1846.09" />
-              <TopNavBar stockItem="COAL" currentPrice="1067.86" />
+              <TopNavBar stockItem="GOLD" priceData={this.state.topNavbarData===null ? null : this.state.topNavbarData.gold} />
+              <TopNavBar stockItem="OIL" priceData={this.state.topNavbarData===null ? null : this.state.topNavbarData.oil} />
+              <TopNavBar stockItem="SENSEX" priceData={this.state.topNavbarData===null ? null : this.state.topNavbarData.sensex}/>
+              <TopNavBar stockItem="COAL" priceData={this.state.topNavbarData===null ? null : this.state.topNavbarData.coal} />
             </Row>
             <Row  className="imageRow preheader justify-content">
               <Col xs md={4} lg={5} xl={5} >
@@ -232,7 +242,7 @@ class App extends Component {
             </Row>
           </Container>
           {
-            this.state.dataLoading===true ? <div className="loader spinnerContainer">Loading</div> : this.state.dataLoading === false ? this.transformData() : null
+            this.state.dataLoading===true ? <div className="loader spinnerContainer">Loading</div> : this.state.dataLoading === false ? this.transformData() : null //agar data load hogya he to matlab pura data load hogya
           }
           {
             this.state.forecastStarted===true ? (
