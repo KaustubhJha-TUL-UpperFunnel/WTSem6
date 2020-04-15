@@ -75,7 +75,7 @@ class App extends Component {
       GLOBAL_currentForecast = forecast;
       GLOBAL_currentActual = GLOBAL_t.data[Iter+1][1];
 
-      axios.post('YOUR_FIREBASE_APP',{
+      axios.post('https://wt-project-be33d.firebaseio.com/forecast-values.json',{
         forecast:GLOBAL_currentForecast,
         actualValue:GLOBAL_currentActual
       })
