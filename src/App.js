@@ -29,7 +29,7 @@ var Mean;
 var Stdev;
 
 var GLOBAL_t;
-var Iter = 12;
+var Iter = 24;
 
 class App extends Component {
   state = {
@@ -59,7 +59,7 @@ class App extends Component {
       console.log("New ForeCast")
       console.log(event)
       var coeffs = GLOBAL_t.ARMaxEntropy({
-        data: GLOBAL_t.data.slice(Iter-12,Iter)
+        data: GLOBAL_t.data.slice(Iter-24,Iter)
       })
 
       console.log(coeffs);
@@ -75,7 +75,7 @@ class App extends Component {
       GLOBAL_currentForecast = forecast;
       GLOBAL_currentActual = GLOBAL_t.data[Iter+1][1];
 
-      axios.post('YOUR_FIREBASE_APP',{
+      axios.post('https://wt-project-be33d.firebaseio.com/forecast-values.json',{
         forecast:GLOBAL_currentForecast,
         actualValue:GLOBAL_currentActual
       })
@@ -258,5 +258,4 @@ class App extends Component {
     )
   }
 }
-
 export default App;
