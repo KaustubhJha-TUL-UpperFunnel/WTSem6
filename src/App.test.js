@@ -25,7 +25,7 @@ afterEach(() => {
 
 
 it("post to updating value database test",()=>{
-  axios.post('https://xxxxxxx/forecast-values.json',{
+  axios.post('https://xxxxxxxjsonfilexxxxxxx',{
     forecast:1.0,
     actualValue:1.0
   })
